@@ -4,12 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Puigcerdà-Salamanca Files</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;700&family=Russo+One&display=swap" rel="stylesheet">
+
     <style>
         :root {
-            --bg-color: #0d0d1a;
+            --bg-color: #050510;
             --text-color: #00ffff;
-            --btn-grad1: #ff007f;
-            --btn-grad2: #7000ff;
+            --btn-grad1: #0044ff;
+            --btn-grad2: #ff00dd;
         }
 
         body {
@@ -17,7 +22,7 @@
             padding: 0;
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-family: 'Rajdhani', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -38,6 +43,7 @@
         }
 
         h1 {
+            font-family: 'Orbitron', sans-serif;
             font-size: clamp(2rem, 5vw, 4rem);
             margin: 0;
             text-transform: uppercase;
@@ -54,24 +60,25 @@
             justify-content: center;
             padding: 30px;
             border-radius: 20px;
-            background: rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             width: 100%;
             box-sizing: border-box;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         #output-text {
-            font-size: clamp(1.2rem, 3vw, 2.2rem);
+            font-size: clamp(1.4rem, 3.5vw, 2.4rem);
             font-weight: 600;
-            line-height: 1.4;
+            line-height: 1.3;
             transition: all 0.1s ease;
         }
 
         .blur-spin {
-            filter: blur(12px);
+            filter: blur(14px);
             transform: scale(1.02);
-            opacity: 0.6;
+            opacity: 0.5;
         }
 
         .wildcard {
@@ -91,22 +98,21 @@
             width: 100%;
             max-width: 400px;
             position: relative;
-            min-height: 160px; /* Reserves space so UI doesn't jump */
+            z-index: 10;
         }
 
         button {
+            font-family: 'Russo One', sans-serif;
             padding: 18px 30px;
             border: none;
             border-radius: 50px;
             font-size: 1.2rem;
-            font-weight: bold;
-            text-transform: uppercase;
             letter-spacing: 2px;
             cursor: pointer;
             color: white;
             background: linear-gradient(45deg, var(--btn-grad1), var(--btn-grad2));
             box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s ease;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
         }
 
         button:active {
@@ -114,20 +120,48 @@
         }
 
         .btn-hidden {
-            opacity: 0;
+            opacity: 0.3;
             pointer-events: none;
-            transform: translateY(20px);
+            transform: scale(0.98);
         }
 
         #btn-punishment {
-            background: linear-gradient(45deg, #cc0000, #ff6600);
+            background: linear-gradient(45deg, #990000, #ff3300);
+        }
+
+        /* Secondary Controls Styling */
+        .secondary-controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+
+        .btn-secondary {
+            padding: 10px 20px;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--text-color);
+            color: var(--text-color);
+            box-shadow: none;
+            letter-spacing: 1px;
+            opacity: 0.7;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .status {
             position: absolute;
             bottom: 20px;
-            font-size: 0.9rem;
-            opacity: 0.5;
+            font-size: 1rem;
+            opacity: 0.6;
+            font-family: 'Rajdhani', sans-serif;
+            letter-spacing: 1px;
         }
 
     </style>
@@ -138,12 +172,17 @@
         <h1>The Puigcerdà-Salamanca Files</h1>
         
         <div class="display-box">
-            <div id="output-text">Presiona ESPACIO o haz clic en "YOU CHOOSE" para empezar.</div>
+            <div id="output-text">SISTEMA EN LÍNEA.<br>Presiona ESPACIO o haz clic en "YOU CHOOSE" para empezar.</div>
         </div>
 
         <div class="controls">
             <button id="btn-choose">YOU CHOOSE</button>
             <button id="btn-punishment">PUNISHMENT</button>
+            
+            <div class="secondary-controls">
+                <button class="btn-secondary" id="btn-theme">CYCLE THEME</button>
+                <button class="btn-secondary" id="btn-reset">FACTORY RESET</button>
+            </div>
         </div>
     </div>
 
@@ -248,7 +287,7 @@
             "¿Qué estrategia de comunicación usarías si de repente todos los humanos perdiéramos la capacidad de hablar y tuviéramos que usar gestos exagerados de mimo, pero con cada gesto sonase un pedo?",
             "¿Cómo afrontarías la responsabilidad si te nombraran el árbitro oficial de todas las disputas de vecinos en la ciudad, con poder absoluto de decisión?",
             "¿Qué protocolo seguirías si descubrieras una puerta secreta en casa que te llevara directamente a una sala de cine privada donde siempre ponen tus películas favoritas?",
-            "¿Cómo adaptarías tu rutina si el suelo de todas partes se volviera repentinamente tan resbaladizo como una pista de hielo muy pulida?",
+            "¿Cómo adaptarías tu rutina si el suelo de todas partes se volviera repentனையmente tan resbaladizo como una pista de hielo muy pulida?",
             "¿Qué harías si un buen día las sombras de los objetos proyectaran la forma de cómo eran esos objetos hace cien años y te silbase al pasar?",
             "¿Cómo cambiaría tu vida si nuestra casa empezara a flotar a 5 metros del suelo de forma permanente?",
             "¿Cuál sería tu primera idea si pudiéramos ver el espectro completo de la luz infrarroja y ultravioleta a simple vista?",
@@ -333,6 +372,9 @@
         let activeQuestions = JSON.parse(localStorage.getItem('psFiles_questions')) || [...masterQuestions];
         let activePunishments = JSON.parse(localStorage.getItem('psFiles_punishments')) || [...masterPunishments];
         let isSpinning = false;
+        
+        // Pick a random theme on startup
+        let currentThemeIndex = Math.floor(Math.random() * themes.length);
 
         function updateCounter() {
             if (activeQuestions.length === 0) activeQuestions = [...masterQuestions];
@@ -345,7 +387,7 @@
         }
         updateCounter();
 
-        // --- WEB AUDIO API (Synthesized Sounds) ---
+        // --- WEB AUDIO API (Synthesized Sounds, Max 15% Vol) ---
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx;
 
@@ -360,8 +402,9 @@
             const gain = audioCtx.createGain();
             osc.type = 'square';
             osc.frequency.setValueAtTime(400 + Math.random() * 400, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.05, audioCtx.currentTime); // 5% volume for rapid fire
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+            // Lowered blip volume
+            gain.gain.setValueAtTime(0.015, audioCtx.currentTime); 
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start();
@@ -375,7 +418,8 @@
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(150, audioCtx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.5);
-            gain.gain.setValueAtTime(0.25, audioCtx.currentTime); // 25% max volume
+            // Max volume capped at 15%
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime); 
             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.5);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
@@ -391,7 +435,8 @@
             osc.frequency.setValueAtTime(600, audioCtx.currentTime);
             osc.frequency.linearRampToValueAtTime(800, audioCtx.currentTime + 0.2);
             osc.frequency.linearRampToValueAtTime(400, audioCtx.currentTime + 0.5);
-            gain.gain.setValueAtTime(0.20, audioCtx.currentTime);
+            // Max volume capped at 15%
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
@@ -400,13 +445,16 @@
         }
 
         // --- GAME LOGIC ---
-        function applyRandomTheme() {
-            const t = themes[Math.floor(Math.random() * themes.length)];
+        function applyTheme(index) {
+            const t = themes[index];
             document.documentElement.style.setProperty('--bg-color', t.bg);
             document.documentElement.style.setProperty('--text-color', t.text);
             document.documentElement.style.setProperty('--btn-grad1', t.g1);
             document.documentElement.style.setProperty('--btn-grad2', t.g2);
         }
+        
+        // Apply initial theme on load
+        applyTheme(currentThemeIndex);
 
         function spin(type) {
             if (isSpinning) return;
@@ -415,13 +463,14 @@
 
             const textEl = document.getElementById('output-text');
             const btnChoose = document.getElementById('btn-choose');
+            const btnPunish = document.getElementById('btn-punishment');
             const sourceArray = type === 'question' ? activeQuestions : activePunishments;
             
             // UI States
             textEl.classList.remove('wildcard');
             btnChoose.classList.add('btn-hidden');
+            btnPunish.classList.add('btn-hidden');
             textEl.classList.add('blur-spin');
-            applyRandomTheme();
 
             let ticks = 0;
             const maxTicks = 25; // Spin duration
@@ -434,12 +483,12 @@
 
                 if (ticks >= maxTicks) {
                     clearInterval(spinInterval);
-                    finalizeSpin(type, sourceArray, textEl, btnChoose);
+                    finalizeSpin(type, sourceArray, textEl, btnChoose, btnPunish);
                 }
             }, 80);
         }
 
-        function finalizeSpin(type, array, textEl, btnChoose) {
+        function finalizeSpin(type, array, textEl, btnChoose, btnPunish) {
             // Pick and remove final item
             const randomIndex = Math.floor(Math.random() * array.length);
             const finalResult = array.splice(randomIndex, 1)[0];
@@ -459,23 +508,45 @@
                 playImpact();
             }
 
-            // Bring button back
+            // Bring buttons back
             setTimeout(() => {
                 btnChoose.classList.remove('btn-hidden');
+                btnPunish.classList.remove('btn-hidden');
                 isSpinning = false;
             }, 800);
+        }
+
+        function resetGame() {
+            if(confirm("¿Estás seguro de que quieres formatear la base de datos y empezar de cero?")) {
+                localStorage.removeItem('psFiles_questions');
+                localStorage.removeItem('psFiles_punishments');
+                activeQuestions = [...masterQuestions];
+                activePunishments = [...masterPunishments];
+                updateCounter();
+                
+                const textEl = document.getElementById('output-text');
+                textEl.classList.remove('wildcard');
+                textEl.innerHTML = "SISTEMA RESTAURADO.<br>Base de datos lista.";
+            }
+        }
+
+        function cycleTheme() {
+            currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+            applyTheme(currentThemeIndex);
         }
 
         // --- EVENT LISTENERS ---
         document.getElementById('btn-choose').addEventListener('click', () => spin('question'));
         document.getElementById('btn-punishment').addEventListener('click', () => spin('punishment'));
+        document.getElementById('btn-reset').addEventListener('click', resetGame);
+        document.getElementById('btn-theme').addEventListener('click', cycleTheme);
 
         window.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') {
+            if (e.code === 'Space' && !isSpinning) {
                 e.preventDefault();
                 spin('question');
             }
-            if (e.code === 'Enter') {
+            if (e.code === 'Enter' && !isSpinning) {
                 e.preventDefault();
                 spin('punishment');
             }

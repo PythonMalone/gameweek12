@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Puigcerdà-Salamanca Files</title>
+    <style>
+        :root {
+            --bg-color: #0d0d1a;
+            --text-color: #00ffff;
+            --btn-grad1: #ff007f;
+            --btn-grad2: #7000ff;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            overflow: hidden;
+            transition: background-color 0.8s ease, color 0.8s ease;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 5vw, 4rem);
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            font-weight: 900;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .display-box {
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #output-text {
+            font-size: clamp(1.2rem, 3vw, 2.2rem);
+            font-weight: 600;
+            line-height: 1.4;
+            transition: all 0.1s ease;
+        }
+
+        .blur-spin {
+            filter: blur(12px);
+            transform: scale(1.02);
+            opacity: 0.6;
+        }
+
+        .wildcard {
+            color: #ff3333 !important;
+            animation: pulse-red 1s infinite alternate;
+        }
+
+        @keyframes pulse-red {
+            from { text-shadow: 0 0 10px #ff0000; transform: scale(1); }
+            to { text-shadow: 0 0 30px #ff0000; transform: scale(1.05); }
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+            min-height: 160px; /* Reserves space so UI doesn't jump */
+        }
+
+        button {
+            padding: 18px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            color: white;
+            background: linear-gradient(45deg, var(--btn-grad1), var(--btn-grad2));
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s ease;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .btn-hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px);
+        }
+
+        #btn-punishment {
+            background: linear-gradient(45deg, #cc0000, #ff6600);
+        }
+
+        .status {
+            position: absolute;
+            bottom: 20px;
+            font-size: 0.9rem;
+            opacity: 0.5;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>The Puigcerdà-Salamanca Files</h1>
+        
+        <div class="display-box">
+            <div id="output-text">Presiona ESPACIO o haz clic en "YOU CHOOSE" para empezar.</div>
+        </div>
+
+        <div class="controls">
+            <button id="btn-choose">YOU CHOOSE</button>
+            <button id="btn-punishment">PUNISHMENT</button>
+        </div>
+    </div>
+
+    <div class="status" id="counter">Cargando base de datos...</div>
+
+    <script>
+        // --- DATA ARRAYS ---
+        const masterQuestions = [
+            "¿Cómo gestionarías las relaciones públicas y el día a día si una nave alienígena aterrizara en Nieuwegein y exigiera a Khione como su nuevo líder galáctico?",
+            "Si estuviéramos atrapados en un bucle temporal de 24 horas durante un concierto de Sleep Token, ¿cuál sería tu estrategia personal para romper el bucle o aprovecharlo al máximo?",
+            "Si de repente encogiéramos a 5 centímetros de altura mientras preparamos la cena, y la sartén tiene aceite a mucha temperatura, ¿cuál sería tu plan de supervivencia inmediato para cruzar la cocina a salvo?",
+            "¿Cómo te adaptarías física y mentalmente si la gravedad se invirtiera de repente ahora mismo, pero solo en esta habitación?",
+            "¿Cómo negociarías con Kazu si de repente empezara a hablar en perfecto castellano, pero lo usara exclusivamente para criticar sin piedad nuestra forma de vestir cada día?",
+            "Si toda nuestra colección de música cobrara vida para montar un pogo en miniatura en el salón, ¿cómo harías personalmente para contener el caos?",
+            "¿Cuáles serían tus tres primeras acciones si al cruzar la puerta principal de casa nos teletransportáramos directamente a la Plaza Mayor de Salamanca?",
+            "¿Cómo sobrellevarías a nivel personal si la vida cotidiana se convirtiera en un musical en el que cada conversación tuviera que cantarse con guturales?",
+            "¿Qué rol específico te asignarías para nuestra supervivencia si una anomalía biológica nos obligara a huir a una cabaña remota en Puigcerdà?",
+            "¿Qué harías ante la revelación de que nuestra conexión a internet es en realidad un enlace directo con el Arquitecto de la simulación de nuestro universo?",
+            "¿Cómo fingirías normalidad durante todo el día si intercambiáramos nuestros cuerpos durante 24 horas?",
+            "¿Cuál sería tu plan maestro para rediseñar nuestras rutinas diarias si un fallo atmosférico ajustase permanentemente la temperatura de Utrecht a 40 °C?",
+            "¿Cuál sería tu estrategia física exacta para cruzar la casa si el suelo se convirtiera en lava y solo tuviéramos los cojines del sofá como piedras para atraversarla?",
+            "¿Cómo cambiaría tu rutina mental diaria si todas las pantallas digitales murieran para siempre, obligándonos a depender estrictamente de la tecnología analógica y los medios físicos?",
+            "¿Cómo aprovecharías el momento si uno de los dos pudiera teletransportarse a cualquier lugar, pero el otro solo pudiera hacerse invisible cuando nadie lo estuviera mirando?",
+            "¿Cómo priorizarías el uso de exactamente un 45% de batería del móvil si de repente regresásemos a pleno siglo XVI?",
+            "¿Qué problema científico o logístico abordarías primero si la trama de Proyecto Hail Mary se hiciera realidad y tuviéramos que coordinar una misión interestelar desde el sofá?",
+            "¿Cómo reaccionarías si una sociedad secreta nos reclutara para encontrar el último gramo de pimentón del universo, sabiendo nuestra estricta política de tolerancia cero en casa?",
+            "¿Cuál sería tu solución de ingeniero/a o conductual para pasear de forma segura a una Khione del tamaño de un rinoceronte por las calles de Batau-Noord?",
+            "¿Cómo alterarías tu forma de comunicarte si los pájaros del barrio empezaran a emitir a la perfección nuestras conversaciones privadas del día anterior?",
+            "¿Qué prueba psicológica o pregunta súper específica usarías para demostrar que eres tu verdadero 'yo' si aparecieran clones exactos en la puerta y las cámaras de seguridad les dieran la razón?",
+            "¿Cómo utilizarías la capacidad de volverte completamente invisible, teniendo en cuenta que solo funciona mientras tocas un solo increíble en una guitarra de heavy metal?",
+            "¿Cómo gestionarías tu monólogo interno si cada pensamiento que tuvieras se proyectara al instante sobre tu cabeza como una tira cómica estilo xkcd?",
+            "¿Cuál sería tu solución basada en la física para moverte por casa si toda la fricción cayera de repente a cero absoluto?",
+            "¿Cómo procesaría tu cerebro un mundo que se ha vuelto monocromático, donde el único color visible fuera el tono exacto de la mayonesa de sriracha?",
+            "¿Cómo lidiarías emocional y físicamente si cada líquido que bebieras durante una semana supiera solamente a café solo?",
+            "¿Qué planes de vida a largo plazo cambiarías inmediatamente si ambos empezáramos a envejecer hacia atrás, empezando en este mismo segundo?",
+            "¿Cómo defenderías tus decisiones culinarias ante el fantasma de un chef muy crítico del siglo XIX que rondara nuestra cocina solo para juzgar nuestras comidas poco preparadas?",
+            "¿Qué tipo de lógica o tácticas de negociación usarías si los nodos de internet en nuestra casa adquirieran consciencia y secuestraran el Wi-Fi tras un acertijo muy complejo?",
+            "¿Cómo plantearías resolver un acertijo de física que acabaría con el universo si fuera la única forma es desconectarnos de la simulación y, posiblemente, morir en el intento?",
+            "¿Qué habilidades específicas, o favores personales, ofrecerías como moneda de cambio si la economía global colapsara y pasara a ser un sistema de trueque de favores?",
+            "¿Cómo asimilaría tu cerebro la información sensorial de distorsiones visuales relativistas masivas solo por ir caminando a la cocina a 10 km/h?",
+            "¿Cómo rediseñarías tu rutina diaria si Utrecht se sumiera de repente en una noche perpetua e interminable?",
+            "¿Cuál sería tu estrategia para realizar las tareas diarias si la gravedad de la Tierra se duplicara permanentemente, convirtiendo cada movimiento en un esfuerzo increíble?",
+            "¿Cómo gestionarías la logística de hacer la compra y pasear a los perros si Nieuwegein se transformara instantáneamente en una ciudad acuática al estilo Venecia?",
+            "¿Cómo optimizarías tu productividad y aficiones si un evento cósmico cambiara permanentemente nuestros ciclos de sueño para despertarnos a medianoche?",
+            "¿Cuál sería tu primer proyecto de reforma si toda nuestra casa y todo lo que hay dentro se transformara de repente en bloques de Lego?",
+            "¿Cómo aprovecharías las físicas de los videojuegos en el mundo real si de repente ganaras la habilidad de hacer doble salto y atravesar paredes?",
+            "¿Cómo gestionarías el ecosistema de la casa si todos nuestros muebles cobraran vida y migraran constantemente hacia la habitación con más temperatura?",
+            "¿Cómo manejaría tu procesamiento sensorial un mundo donde todo el sonido cesara, reemplazado únicamente por una fuerte e ineludible canción de synth-pop de los 80?",
+            "¿Qué sistema inventarías para encontrar rápidamente tus cosas si la casa reorganizara activamente toda su distribución cada noche a las 3:00 AM?",
+            "¿Cómo prepararías el salón antes de dormir si supieras que cualquier cosa que soñaras se manifestaría físicamente allí a la mañana siguiente?",
+            "¿Cuál sería tu enfoque de ingeniería para construir rápidamente una jaula de Faraday gigante alrededor de la casa y sobrevivir a un colapso total del campo magnético?",
+            "¿Cómo usarías personalmente la información si nuestra cámara del salón empezara a emitir en directo en Twitch 24 horas en el futuro?",
+            "¿Cómo pasarías tu primera semana si fuéramos las dos últimas personas en la Tierra y decidiéramos ir a vivir dentro del cine Kinepolis?",
+            "¿Qué papel de investigación o supervivencia asumirías si nos despertáramos atrapados en una Escape Room dentro de una mansión aislada por la nieve en Puigcerdà?",
+            "¿Cómo te las arreglarías para expresar emociones complejas, como la frustración o la alegría, si nos viéramos obligados a comunicarnos estrictamente tocando un instrumento musical durante una semana?",
+            "¿Cómo organizarías nuestra resistencia culinaria clandestina si una nueva ley en el país hiciera obligatorio incluir pimentón en absolutamente todas las comidas?",
+            "¿Cuál sería tu metodología paso a paso para fingir ser el ingeniero jefe de una nave colonial interestelar sin provocar un fallo catastrófico?",
+            "¿Cómo manejarías la dinámica intelectual en casa si Kazu de repente adquiriera la inteligencia de un físico cuántico?",
+            "¿Qué sistema defensivo ingeniarías si descubriéramos que la IA de nuestra casa inteligente se ha propuesto no dejarnos dormir bloqueando persianas y flasheando las luces?",
+            "¿Cómo organizarías mentalmente un atraco a un museo si tuviéramos que robar una máscara legendaria para salvar el mundo de una invasión alienígena?",
+            "¿Cómo gestionarías la logística de la cocina si de repente toda el agua del grifo saliera en forma de gelatina?",
+            "¿Qué estrategia seguirías si te despertaras con la capacidad de leer la mente, pero solo cuando alguien estuviera pensando en hacer daño a otra persona?",
+            "¿Cómo estructurarías nuestro tiempo libre si el día pasara a tener 36 horas en lugar de 24, pero con la misma necesidad de horas de sueño?",
+            "¿Cuál sería tu táctica para escapar si nos quedáramos encerrados en una tienda de muebles inmensamente gigantes, estilo laberinto, y las luces estuviesen siempre apagadas?",
+            "¿Cómo asimilarías emocionalmente que nuestro salón se convirtiera en un portal a un universo paralelo donde nosotros somos cantantes pop súper famosos?",
+            "¿Qué protocolo establecerías si cada vez que nos riéramos flotáramos a 10 centímetros del suelo durante un minuto?",
+            "¿Cómo planificarías nuestro próximo viaje de vacaciones si la única forma de transporte disponible fuera ir encima de pájaros gigantes domesticados?",
+            "¿Cuál sería tu filosofía respecto a ellos si descubriéramos que nuestros perros llevan años escribiendo un blog sobre nosotros que tiene millones de seguidores?",
+            "¿Cómo te organizarías si pudieras detener el tiempo durante una hora al día, pero en esa hora no pudieras interactuar con nada ni con nadie?",
+            "¿Qué táctica usarías para ganar una discusión si las palabras literalmente tomaran forma física, con gravedad incluída, al salir de nuestras bocas?",
+            "¿Cómo adaptarías tus aficiones si tus manos se volvieran del tamaño de sartenes de hierro fundido cada vez que intentas coger un objeto?",
+            "¿Cómo reaccionarías si cada vez que entraras en la cocina, un coro invisible cantara tu nombre a cuatro voces?",
+            "¿Qué experimento diseñarías para comprobar la realidad si de repente toda la gente de la calle empezara a caminar exclusivamente hacia atrás?",
+            "¿Cómo te planificarías si la moneda de pago oficial se convirtiera en poemas improvisados de al menos cuatro versos?",
+            "¿Cuál sería tu reacción si tocar césped recién cortado ahora provocara estornudos explosivos que suenan como pedos enormes?",
+            "¿Cómo actuarías si de pronto pudieras ver un temporizador sobre la cabeza de cada persona indicando cuánto tiempo le queda para su próximo pedo con caldillo?",
+            "¿Cómo rediseñarías la casa si las paredes de repente se volvieran translúcidas y no existiera la privacidad?",
+            "¿Qué método aplicarías para investigar por qué todos los semáforos de la ciudad siempre se ponen en verde justo cuando llegamos a ellos?",
+            "¿Cómo abordarías la situación si un día los espejos de la casa empezaran a reflejar nuestra imagen con 5 segundos de retraso?",
+            "¿Qué rol tomarías en un escenario postapocalíptico donde la única forma de tener electricidad fuera tocando percusión sin parar?",
+            "¿Qué harías ante el hecho de que de la noche a la mañana todas las plantas empezaran a susurrarte scams del Principe de Nigeria?",
+            "¿Cómo organizarías una cena romántica si la gravedad cambiara aleatoriamente cada 5 minutos durante la velada?",
+            "¿Qué harías si cada libro que leyéramos se borrara de la existencia en cuanto llegáramos a la última página?",
+            "¿Cómo afrontarías tu día a día si tus niveles de energía física estuvieran ligados directamente al porcentaje de batería de tu teléfono móvil?",
+            "¿Cuál sería tu plan de acción si descubrieras que la única manera de encender cualquier electrodoméstico es haciéndole un cumplido sincero?",
+            "¿Cómo planificarías la mudanza si nos tocara irnos a vivir a una estación espacial donde el suelo es una cama elástica?",
+            "¿Qué estrategia seguirías para orientarte siempre si todos los mapas del mundo cambiaran de repente y el norte pasara a ser el sur?",
+            "¿Cómo reaccionarías si pudieras entender todos los idiomas del mundo, pero a cambio solo pudieras hablar en rimas consonantes y silbando?",
+            "¿Cómo organizarías la limpieza si el polvo de la casa empezara a brillar en la oscuridad y a emitir un zumbido agudo?",
+            "¿Qué medida tomarías si la ropa en los armarios cobrara vida e intentara fugarse cada vez que abrimos la puerta?",
+            "¿Cómo afrontarías el reto logístico de tener que hacer la compra si los pasillos del supermercado cambiaran como si fueran el laberinto del Minotauro cada vez que vas?",
+            "¿Cómo lo harías si el clima dependiera de tu estado de ánimo: soleado si estás feliz, tormenta si estás triste, granizo si te enfadas?",
+            "¿Cómo adaptarías tus horas de sueño si cada vez que cerrásemos los ojos vieses tu película favorita?",
+            "¿Qué rol adoptarías si formáramos un dúo de superhéroes cuyas habilidades sólo funcionaran cuando estamos cogidos de la mano?",
+            "¿Cómo solucionarías el problema de no poder mentir nunca más, ni siquiera para las pequeñas mentiras piadosas del día a día?",
+            "¿Qué harías si descubrieras que tu sombra tiene voluntad propia y se dedica a hacer mimos a los perros a tus espaldas?",
+            "¿Cómo planificarías tus comidas si cada alimento te proporcionara un recuerdo aleatorio de la persona que lo cultivó o fabricó?",
+            "¿Cuál sería tu reacción inmediata si el timbre de la puerta empezara a sonar con la melodía de tu canción favorita, pero a un volumen exagerado, y por todo el barrio?",
+            "¿Cómo te organizarías si de repente pudieras multiplicarte por dos, pero tu clon fuera un experto en todo lo que tú odias hacer?",
+            "¿Qué harías si un genio te concediera el poder de la telequinesis, pero solo pudieras mover objetos que pesaran exactamente 500 gramos?",
+            "¿Cómo procesarías el descubrimiento de que las nubes están hechas de algodón de azúcar real y de repente empezara a llover caramelo de ellas?",
+            "¿Qué estrategia de comunicación usarías si de repente todos los humanos perdiéramos la capacidad de hablar y tuviéramos que usar gestos exagerados de mimo, pero con cada gesto sonase un pedo?",
+            "¿Cómo afrontarías la responsabilidad si te nombraran el árbitro oficial de todas las disputas de vecinos en la ciudad, con poder absoluto de decisión?",
+            "¿Qué protocolo seguirías si descubrieras una puerta secreta en casa que te llevara directamente a una sala de cine privada donde siempre ponen tus películas favoritas?",
+            "¿Cómo adaptarías tu rutina si el suelo de todas partes se volviera repentinamente tan resbaladizo como una pista de hielo muy pulida?",
+            "¿Qué harías si un buen día las sombras de los objetos proyectaran la forma de cómo eran esos objetos hace cien años y te silbase al pasar?",
+            "¿Cómo cambiaría tu vida si nuestra casa empezara a flotar a 5 metros del suelo de forma permanente?",
+            "¿Cuál sería tu primera idea si pudiéramos ver el espectro completo de la luz infrarroja y ultravioleta a simple vista?",
+            "¿Cómo reaccionarías si cada vez que chocaras los cinco con alguien, se produjera una pequeña explosión inofensiva de confeti?",
+            "¿Qué medida tomarías si descubrieras que puedes respirar bajo el agua, pero solo en agua dulce y a temperaturas por debajo de los 10 °C?",
+            "¿Cómo organizarías tus tareas si de repente no tuvieras necesidad alguna de dormir y estuvieras al 100% de energía las 24 horas del día?",
+            "¿Qué estrategia seguirías si todas las sillas en las que te sentaras emitieran el sonido de un claxon de camión al tocarlas con el culillo?",
+            "¿Cómo afrontarías la situación si los libros de tu biblioteca empezaran a reescribirse a sí mismos basándose en tus decisiones de la vida real?",
+            "¿Cuál sería tu plan para sobrevivir si ahora puedes levitar 20 centímetros de la superficie, pero no puedes caminar normalmente ,y si algo está mojado automáticamente caes al suelo?",
+            "¿Cómo organizarías la convivencia si todos los electrodomésticos de la casa tuvieran la personalidad de un adolescente rebelde?",
+            "¿Qué protocolo usarías para elegir una película si la tele solo mostrara contenido de dimensiones alternativas?",
+            "¿Cómo sobrellevarías el hecho de que la única forma de cargar la batería de tus dispositivos fuera bailando claqué durante cinco minutos?",
+            "¿Cómo te adaptarías si descubrieras que tu voz puede romper cristales, pero solo cuando intentas susurrar?",
+            "¿Cómo estructurarías un viaje en coche si todos los vehículos pasaran a funcionar con la energía de los gritos agudos de Kazu?",
+            "¿Qué sistema de clasificación inventarías si pudieras ver visualmente las auras de las personas según sus gustos culinarios?",
+            "¿Cómo te enfrentarías al hecho de que cada vez que parpadeas, cambian aleatoriamente el color de tus ojos?",
+            "¿Cuál sería tu enfoque para cocinar si descubrieras que la comida que preparas adquiere el sabor de la última canción que has escuchado?",
+            "¿Cómo te prepararías si en lugar de nevar cayera baba muy espesa de Kazu?",
+            "¿Qué medidas de seguridad tomarías si los cuadros de la casa cobraran vida por la noche y organizaran fiestas?",
+            "¿Cómo gestionarías la sorpresa si descubrieras que los perros en realidad entienden de mecánica y han estado arreglando todo en casa, pero en secreto?",
+            "¿Qué estrategia seguirías si al abrir cualquier libro de ciencia ficción te teletransportaras automáticamente al escenario del primer capítulo?",
+            "¿Cómo organizarías tu día si la única forma de abrir las puertas de la casa fuera resolviendo una ecuación matemática simple pero diferente cada vez?",
+            "¿Qué harías si descubrieras que todas las mañanas te despiertas con el talento magistral para tocar un instrumento musical nuevo, pero lo olvidas al anochecer?"
+        ];
+
+        const masterPunishments = [
+            "Imita a Kazu pidiendo comida o atención de forma dramática durante 30 segundos.",
+            "Imita a Khione pidiendo comida o atención de forma dramática durante 30 segundos.",
+            "Intenta explicar la trama de un thriller psicológico complejísimo en menos de 15 segundos sin respirar.",
+            "Tararea un riff de metal mientras el otro intenta adivinar qué banda es.",
+            "Dale a Khione un masaje relajante durante un minuto completo.",
+            "Habla únicamente formulando preguntas cerradas hasta que termine la siguiente ronda.",
+            "Simula que caminas sin gravedad por el salón hasta la puerta del jardín y vuelve.",
+            "Deja que el ganador te dibuje un bigote pequeño en el dedo índice para que te lo pongas en la cara durante las próximas 3 rondas.",
+            "Intenta hacer tu mejor gutural, pero en un susurro inaudible para no molestar a los vecinos.",
+            "Recita el abecedario al revés mientras haces equilibrio con un boli en la nariz.",
+            "Inventa una idea terrible para un nuevo mueble de IKEA y ponle un nombre sueco que suene ridículo.",
+            "Confiesa un 'crimen' ridículamente menor e inofensivo que hayas cometido en la casa esta semana.",
+            "Habla con cadencia dramática, fascinada y pausada durante los próximos 3 minutos.",
+            "Simula estar tocando un solo de batería súper complejo y rápido durante 20 segundos.",
+            "Inventa sobre la marcha un poema de cuatro versos sobre la comida que estamos cenando hoy.",
+            "Para la siguiente ronda, tienes que escribir tu respuesta usando exclusivamente tu mano no dominante.",
+            "Explica cómo funciona una nave espacial usando solo palabras que un niño de 5 años entendería.",
+            "Mantén un concurso de miradas dramático con uno de los perros; si el perro aparta la vista primero, come una galleta.",
+            "Toca un instrumento musical acompañando un breakdown imaginario con cara de máxima concentración y excitación.",
+            "Habla como un detective del siglo XIX, como resolviendo un misterio, durante toda la siguiente ronda.",
+            "Haz una lectura dramática e intensa de 30 segundos de las condiciones de un servicio o un manual.",
+            "Finge ser una cámara de seguridad que funciona mal mientras escaneas robóticamente el salón con la cabeza.",
+            "Nombra 5 grupos de música o 5 autores de libros del género favorito del ganador de la ronda anterior en 10 segundos.",
+            "Intenta tocarte la nariz con la lengua mientras mantienes contacto visual conmigo, fijo, y sin reírte.",
+            "Elogia la caligrafía del ganador de una manera exageradamente y poética.",
+            "Actúa como el asistente personal del ganador durante los próximos 5 minutos.",
+            "Sostén un boli haciendo equilibrio sobre tu cabeza mientras explicas tu siguiente respuesta en la siguiente ronda.",
+            "Describe tu película favorita usando puntos de la trama que sean completamente falsos y absurdos.",
+            "Haz tu mejor imitación de la otra persona cuando está muy concentrada intentando resolver un problema difícil.",
+            "Canta la siguiente respuesta que des como si fuera una ópera trágica.",
+            "Inventa una nueva tradición de un pueblo de Salamanca o Puigcerdà completamente falsa y explícala de forma súper convincente.",
+            "Habla con un acento francés terrible y exagerado durante toda la duración de la siguiente ronda.",
+            "Narra tus propias acciones en voz alta como si fueras un comentarista deportivo de élite durante 2 minutos.",
+            "Tienes que referirte al ganador como 'Su Majestad' durante las próximas 3 rondas.",
+            "Da una micro charla TED de 1 minuto sobre por qué la mayonesa de Sriracha es superior a todas las demás salsas del universo.",
+            "Finge que el suelo es lava: si te tienes que levantar durante el próximo minuto, solo puedes tocar el suelo con un pie dando saltos.",
+            "Pídele disculpas profusamente y con mucha pena a un mueble del salón por haberlo mirado mal.",
+            "Inventa y presenta el argumento de un crossover épico entre la banda Sleep Token y un libro de Juán Gomez-Jurado.",
+            "Actúa como un extraterrestre que acaba de aterrizar en la Tierra y está probando comida a domicilio por primera vez en su vida.",
+            "Dale a la otra persona una ovación de pie altamente exagerada y emotiva durante 20 segundos seguidos.",
+            "Inventa un sonido nuevo y ridículo para notificaciones de móvil y reprodúcelo con la boca cada vez que el ganador termine de hablar en la siguiente ronda."
+        ];
+
+        const themes = [
+            { name: "Deep Space", bg: "#050510", text: "#00ffff", g1: "#0044ff", g2: "#ff00dd" },
+            { name: "Synthwave", bg: "#1a0b2e", text: "#ff007f", g1: "#ff9900", g2: "#ff007f" },
+            { name: "Amber Alert", bg: "#141414", text: "#ffaa00", g1: "#ff5500", g2: "#cc0000" },
+            { name: "Cyberpunk", bg: "#0d1b2a", text: "#00ffcc", g1: "#00ffcc", g2: "#0066ff" },
+            { name: "Crimson Void", bg: "#2a0808", text: "#ffcccc", g1: "#ff0000", g2: "#660000" },
+            { name: "Neon Mint", bg: "#0a241e", text: "#00ff99", g1: "#00ff99", g2: "#0099cc" },
+            { name: "Solar Flare", bg: "#2b1304", text: "#ffcc00", g1: "#ffcc00", g2: "#ff3300" },
+            { name: "Abyssal Blue", bg: "#020b1f", text: "#99ccff", g1: "#3366ff", g2: "#9900ff" }
+        ];
+
+        // --- STATE MANAGEMENT ---
+        let activeQuestions = JSON.parse(localStorage.getItem('psFiles_questions')) || [...masterQuestions];
+        let activePunishments = JSON.parse(localStorage.getItem('psFiles_punishments')) || [...masterPunishments];
+        let isSpinning = false;
+
+        function updateCounter() {
+            if (activeQuestions.length === 0) activeQuestions = [...masterQuestions];
+            if (activePunishments.length === 0) activePunishments = [...masterPunishments];
+            
+            localStorage.setItem('psFiles_questions', JSON.stringify(activeQuestions));
+            localStorage.setItem('psFiles_punishments', JSON.stringify(activePunishments));
+            
+            document.getElementById('counter').innerText = `Archivos restantes: ${activeQuestions.length} / Castigos: ${activePunishments.length}`;
+        }
+        updateCounter();
+
+        // --- WEB AUDIO API (Synthesized Sounds) ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new AudioContext();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playBlip() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(400 + Math.random() * 400, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime); // 5% volume for rapid fire
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.05);
+        }
+
+        function playImpact() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.5);
+            gain.gain.setValueAtTime(0.25, audioCtx.currentTime); // 25% max volume
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.5);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 1.5);
+        }
+
+        function playWildcard() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(800, audioCtx.currentTime + 0.2);
+            osc.frequency.linearRampToValueAtTime(400, audioCtx.currentTime + 0.5);
+            gain.gain.setValueAtTime(0.20, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 1);
+        }
+
+        // --- GAME LOGIC ---
+        function applyRandomTheme() {
+            const t = themes[Math.floor(Math.random() * themes.length)];
+            document.documentElement.style.setProperty('--bg-color', t.bg);
+            document.documentElement.style.setProperty('--text-color', t.text);
+            document.documentElement.style.setProperty('--btn-grad1', t.g1);
+            document.documentElement.style.setProperty('--btn-grad2', t.g2);
+        }
+
+        function spin(type) {
+            if (isSpinning) return;
+            initAudio();
+            isSpinning = true;
+
+            const textEl = document.getElementById('output-text');
+            const btnChoose = document.getElementById('btn-choose');
+            const sourceArray = type === 'question' ? activeQuestions : activePunishments;
+            
+            // UI States
+            textEl.classList.remove('wildcard');
+            btnChoose.classList.add('btn-hidden');
+            textEl.classList.add('blur-spin');
+            applyRandomTheme();
+
+            let ticks = 0;
+            const maxTicks = 25; // Spin duration
+            const tempArray = type === 'question' ? masterQuestions : masterPunishments;
+
+            const spinInterval = setInterval(() => {
+                playBlip();
+                textEl.innerText = tempArray[Math.floor(Math.random() * tempArray.length)];
+                ticks++;
+
+                if (ticks >= maxTicks) {
+                    clearInterval(spinInterval);
+                    finalizeSpin(type, sourceArray, textEl, btnChoose);
+                }
+            }, 80);
+        }
+
+        function finalizeSpin(type, array, textEl, btnChoose) {
+            // Pick and remove final item
+            const randomIndex = Math.floor(Math.random() * array.length);
+            const finalResult = array.splice(randomIndex, 1)[0];
+            updateCounter();
+
+            // Check Wildcard (5% chance only on questions)
+            const isWildcard = type === 'question' && Math.random() < 0.05;
+
+            textEl.classList.remove('blur-spin');
+            
+            if (isWildcard) {
+                textEl.innerText = "🚨 ¡EVENTO CRÍTICO! 🚨\n\n" + finalResult + "\n\n(El perdedor de esta ronda cumple castigo automáticamente)";
+                textEl.classList.add('wildcard');
+                playWildcard();
+            } else {
+                textEl.innerText = finalResult;
+                playImpact();
+            }
+
+            // Bring button back
+            setTimeout(() => {
+                btnChoose.classList.remove('btn-hidden');
+                isSpinning = false;
+            }, 800);
+        }
+
+        // --- EVENT LISTENERS ---
+        document.getElementById('btn-choose').addEventListener('click', () => spin('question'));
+        document.getElementById('btn-punishment').addEventListener('click', () => spin('punishment'));
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                spin('question');
+            }
+            if (e.code === 'Enter') {
+                e.preventDefault();
+                spin('punishment');
+            }
+        });
+    </script>
+</body>
+</html>
